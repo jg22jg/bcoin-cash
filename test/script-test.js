@@ -5,7 +5,6 @@
 
 const assert = require('./util/assert');
 const Script = require('../lib/script/script');
-const Witness = require('../lib/script/witness');
 const Stack = require('../lib/script/stack');
 const Opcode = require('../lib/script/opcode');
 const TX = require('../lib/primitives/tx');
@@ -41,7 +40,6 @@ function parseScriptTest(data) {
   if (witArr.length > 0)
     value = util.fromFloat(witArr.pop(), 8);
 
-  const witness = Witness.fromString(witArr);
   const input = Script.fromString(inpHex);
   const output = Script.fromString(outHex);
 
@@ -56,7 +54,6 @@ function parseScriptTest(data) {
   }
 
   return {
-    witness: witness,
     input: input,
     output: output,
     value: value,
@@ -273,7 +270,7 @@ describe('Script', function() {
       continue;
 
     const test = parseScriptTest(data);
-    const {witness, input, output} = test;
+    const {input, output} = test;
     const {value, flags} = test;
     const {expected, comments} = test;
 
@@ -293,7 +290,6 @@ describe('Script', function() {
               Opcode.fromInt(0),
               Opcode.fromInt(0)
             ],
-            witness: [],
             sequence: 0xffffffff
           }],
           outputs: [{
@@ -312,7 +308,6 @@ describe('Script', function() {
               index: 0
             },
             script: input,
-            witness: witness,
             sequence: 0xffffffff
           }],
           outputs: [{
@@ -329,7 +324,7 @@ describe('Script', function() {
 
         let err;
         try {
-          Script.verify(input, witness, output, tx, 0, value, flags);
+          Script.verify(input, output, tx, 0, value, flags);
         } catch (e) {
           err = e;
         }
