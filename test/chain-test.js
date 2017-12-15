@@ -400,13 +400,6 @@ describe('Chain', function() {
     assert(await chain.db.verifyDeployments());
   });
 
-  it('should have activated segwit', async () => {
-    const deployments = network.deployments;
-    const prev = await chain.getPrevious(chain.tip);
-    const state = await chain.getState(prev, deployments.segwit);
-    assert.strictEqual(state, 3);
-  });
-
   it('should test csv', async () => {
     const tx = (await chain.getBlock(chain.height - 100)).txs[0];
     const csvBlock = await mineCSV(tx);
