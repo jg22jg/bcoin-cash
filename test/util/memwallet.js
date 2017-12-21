@@ -131,10 +131,8 @@ MemWallet.prototype.deriveKey = function deriveKey(branch, index) {
   const ring = new KeyRing({
     network: this.network,
     privateKey: key.privateKey,
-    witness: this.witness
-  });
-  ring.witness = this.witness;
-  return ring;
+    });
+    return ring;
 };
 
 MemWallet.prototype.getKey = function getKey(hash) {
