@@ -104,8 +104,8 @@ function parseSighashTest(data) {
 
   let hex = type & 3;
 
-  if (type & 0x80)
-    hex |= 0x80;
+  if (type & 0x40)
+    hex |= 0x40;
 
   hex = hex.toString(16);
 
@@ -206,12 +206,6 @@ describe('TX', function() {
       assert(tx.verify(view, Script.flags.VERIFY_P2SH));
     });
 
-    it(`should verify sighash_single bug w/ findanddelete ${suffix}`, () => {
-      const [tx, view] = tx3.getTX();
-      clearCache(tx, noCache);
-      assert(tx.verify(view, Script.flags.VERIFY_P2SH));
-    });
-
     it(`should verify high S value with only DERSIG enabled ${suffix}`, () => {
       const [tx, view] = tx4.getTX();
       const coin = view.getOutputFor(tx.inputs[0]);
@@ -226,10 +220,23 @@ describe('TX', function() {
       assert(tx.verify(view, Script.flags.VERIFY_NONE));
     });
 
-    it(`should verify a historical transaction ${suffix}`, () => {
-      const [tx, view] = tx7.getTX();
-      clearCache(tx, noCache);
-      assert(tx.verify(view));
+    it(`should count sigops for p2sh multisig`, () => {
+      const flags = Script.flags.VERIFY_P2SH;
+      const key = KeyRing.generate();
+      const pub = key.publicKey;
+
+      const redeem = Script.fromMultisig(1, 2, [pub, pub]);
+      const output = Script.fromScripthash(redeem.hash160());
+
+      const input = new Script([
+        Opcode.fromInt(0),
+        Opcode.fromInt(0),
+        Opcode.fromData(redeem.toRaw())
+      ]);
+
+      const ctx = sigopContext(input, output);
+
+      assert.strictEqual(ctx.spend.getSigopsCount(ctx.view, flags), 2);
     });
 
     for (const json of sighashTests) {
