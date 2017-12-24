@@ -71,16 +71,14 @@ function dummyInput() {
   return Input.fromOutpoint(new Outpoint(hash, 0));
 }
 
-async function testP2PKH(witness, nesting) {
+async function testP2PKH(nesting) {
   const flags = Script.flags.STANDARD_VERIFY_FLAGS;
 
-  const wallet = await wdb.create({
-    witness
-  });
+  const wallet = await wdb.create({});
 
   const addr = Address.fromString(wallet.getAddress('string'));
 
-  const type = witness ? Address.types.WITNESS : Address.types.PUBKEYHASH;
+  const type = Address.types.PUBKEYHASH;
   assert.strictEqual(addr.type, type);
 
   const src = new MTX();
@@ -99,15 +97,13 @@ async function testP2PKH(witness, nesting) {
   assert(tx.verify(view, flags));
 }
 
-async function testP2SH(witness, nesting) {
+async function testP2SH(nesting) {
   const flags = Script.flags.STANDARD_VERIFY_FLAGS;
   const receive = nesting ? 'nested' : 'receive';
   const receiveDepth = nesting ? 'nestedDepth' : 'receiveDepth';
-  const vector = witness ? 'witness' : 'script';
-
+  const vector = [];
   // Create 3 2-of-3 wallets with our pubkeys as "shared keys"
   const options = {
-    witness,
     type: 'multisig',
     m: 2,
     n: 3
@@ -128,27 +124,14 @@ async function testP2SH(witness, nesting) {
   await carol.addSharedKey(bob.account.accountKey);
 
   // Our p2sh address
-  const addr1 = alice.account[receive].getAddress();
+  const addr1 = await alice[receiveAddress]();
 
-  if (witness) {
-    const type = nesting ? Address.types.SCRIPTHASH : Address.types.WITNESS;
-    assert.strictEqual(addr1.type, type);
-  } else {
-    assert.strictEqual(addr1.type, Address.types.SCRIPTHASH);
-  }
-
+  assert.strictEqual(addr1.type, Address.types.SCRIPTHASH);
   assert(alice.account[receive].getAddress().equals(addr1));
   assert(bob.account[receive].getAddress().equals(addr1));
   assert(carol.account[receive].getAddress().equals(addr1));
 
   const nestedAddr1 = alice.getNested();
-
-  if (witness) {
-    assert(nestedAddr1);
-    assert(alice.getNested().equals(nestedAddr1));
-    assert(bob.getNested().equals(nestedAddr1));
-    assert(carol.getNested().equals(nestedAddr1));
-  }
 
   {
     // Add a shared unspent transaction to our wallets
@@ -271,18 +254,6 @@ describe('Wallet', function() {
     assert(wallet1.master !== wallet2.master);
     assert(wallet1.master.key.equals(wallet2.master.key));
     assert(wallet1.account.accountKey.equals(wallet2.account.accountKey));
-  });
-
-  it('should sign/verify p2pkh tx', async () => {
-    await testP2PKH(false, false);
-  });
-
-  it('should sign/verify p2wpkh tx', async () => {
-    await testP2PKH(true, false);
-  });
-
-  it('should sign/verify p2wpkh tx w/ nested bullshit', async () => {
-    await testP2PKH(true, true);
   });
 
   it('should multisign/verify TX', async () => {
@@ -764,18 +735,6 @@ describe('Wallet', function() {
     assert.strictEqual(tx.verify(), true);
   });
 
-  it('should verify 2-of-3 p2sh tx', async () => {
-    await testP2SH(false, false);
-  });
-
-  it('should verify 2-of-3 p2wsh tx', async () => {
-    await testP2SH(true, false);
-  });
-
-  it('should verify 2-of-3 p2wsh tx w/ nested bullshit', async () => {
-    await testP2SH(true, true);
-  });
-
   it('should fill tx with account 1', async () => {
     const alice = await wdb.create();
     const bob = await wdb.create();
@@ -1035,11 +994,10 @@ describe('Wallet', function() {
 
     const options = {
       subtractFee: true,
-      rate: 10000,
+      rate: 1000,
       round: true,
       outputs: [{ address: bob.getAddress(), value: 21840 }]
     };
-
     // Create new transaction
     const t2 = await alice.createTX(options);
     await alice.sign(t2);
