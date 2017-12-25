@@ -128,8 +128,6 @@ describe('Block', function() {
     assert(block.verify());
     assert(block.txs[0].isCoinbase());
     assert(block.txs[0].isSane());
-    assert(!block.hasWitness());
-    assert.strictEqual(block.getWeight(), 1136924);
 
     let sigops = 0;
     let reward = 0;
@@ -140,9 +138,8 @@ describe('Block', function() {
       assert(tx.isSane());
       assert(tx.verifyInputs(view, height));
       assert(tx.verify(view, flags));
-      assert(!tx.hasWitness());
 
-      sigops += tx.getSigopsCost(view, flags);
+      sigops += tx.getSigopsCount(view, flags);
       reward += tx.getFee(view);
 
       view.addTX(tx, height);
@@ -150,7 +147,7 @@ describe('Block', function() {
 
     reward += consensus.getReward(height, 210000);
 
-    assert.strictEqual(sigops, 5280);
+    assert.strictEqual(sigops, 1320);
     assert.strictEqual(reward, 2507773345);
     assert.strictEqual(reward, block.txs[0].outputs[0].value);
   });
@@ -342,21 +339,20 @@ describe('Block', function() {
 
   for (const cache of [false, true]) {
     const word = cache ? 'with' : 'without';
-    for (const [name, sigops, weight] of sigopsVectors) {
+    for (const [name, sigops] of sigopsVectors) {
       const ctx = common.readBlock(name);
       it(`should count sigops for ${name} (${word} cache)`, () => {
         const [block, view] = ctx.getBlock();
-        const flags = Script.flags.VERIFY_P2SH | Script.flags.VERIFY_WITNESS;
+        const flags = Script.flags.VERIFY_P2SH;
 
         if (!cache)
           block.refresh(true);
 
         let count = 0;
         for (const tx of block.txs)
-          count += tx.getSigopsCost(view, flags);
+          count += tx.getSigopsCount(view, flags);
 
         assert.strictEqual(count, sigops);
-        assert.strictEqual(block.getWeight(), weight);
       });
     }
   }
