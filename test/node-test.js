@@ -176,7 +176,7 @@ describe('Node', function() {
     await co.timeout(100);
 
     const balance = await wallet.getBalance();
-    assert.strictEqual(balance.unconfirmed, 1100 * 1e8);
+    assert.strictEqual(balance.unconfirmed, 100 * 1e8);
     assert.strictEqual(balance.confirmed, 600 * 1e8);
   });
 
@@ -231,7 +231,7 @@ describe('Node', function() {
   });
 
   it('should have correct chain value', () => {
-    assert.strictEqual(chain.db.state.value, 65000000000);
+    assert.strictEqual(chain.db.state.value, 10000000000);
     assert.strictEqual(chain.db.state.coin, 23);
     assert.strictEqual(chain.db.state.tx, 24);
   });
@@ -255,8 +255,8 @@ describe('Node', function() {
     await co.timeout(100);
 
     const balance = await wallet.getBalance();
-    assert.strictEqual(balance.unconfirmed, 1250 * 1e8);
-    assert.strictEqual(balance.confirmed, 750 * 1e8);
+    assert.strictEqual(balance.unconfirmed,150 * 1e8);
+    assert.strictEqual(balance.confirmed, 150 * 1e8);
 
     assert(wallet.account.receiveDepth >= 7);
     assert(wallet.account.changeDepth >= 6);
@@ -292,7 +292,7 @@ describe('Node', function() {
       total += txs.length;
     });
 
-    assert.strictEqual(total, 26);
+    assert.strictEqual(total, 3);
   });
 
   it('should activate csv', async () => {
@@ -327,7 +327,7 @@ describe('Node', function() {
       }
     }
 
-    assert.strictEqual(chain.height, 432);
+    assert.strictEqual(chain.height, 420);
     assert(chain.state.hasCSV());
 
     const cache = await chain.db.getStateCache();
@@ -447,7 +447,7 @@ describe('Node', function() {
 
   it('should rescan for transactions', async () => {
     await wdb.rescan(0);
-    assert.strictEqual(wallet.txdb.state.confirmed, 1289250000000);
+    assert.strictEqual(wallet.txdb.state.confirmed, 1272500000000);
   });
 
   it('should reset miner mempool', async () => {
@@ -465,9 +465,6 @@ describe('Node', function() {
   it('should get a block template', async () => {
     const json = await node.rpc.call({
       method: 'getblocktemplate',
-      params: [
-        {rules: ['segwit']}
-      ],
       id: '1'
     }, {});
 
@@ -481,11 +478,11 @@ describe('Node', function() {
       result: {
         capabilities: ['proposal'],
         mutable: ['time', 'transactions', 'prevblock'],
-        version: 536870912,
-        rules: ['csv', '!segwit', 'testdummy'],
-        vbavailable: {},
+        version: 805306369,
+        rules: [],
+        vbavailable: {'csv': 0, 'testdummy': 28},
         vbrequired: 0,
-        height: 437,
+        height: 422,
         previousblockhash: node.chain.tip.rhash(),
         target:
           '7fffff0000000000000000000000000000000000000000000000000000000000',
@@ -495,17 +492,13 @@ describe('Node', function() {
         mintime: json.result.mintime,
         maxtime: json.result.maxtime,
         expires: json.result.expires,
-        sigoplimit: 80000,
-        sizelimit: 4000000,
-        weightlimit: 4000000,
+        sigoplimit: 20000,
+        sizelimit: 2000000,
         longpollid: node.chain.tip.rhash() + '0000000000',
         submitold: false,
-        coinbaseaux: { flags: '6d696e65642062792062636f696e' },
+        coinbaseaux: { flags: '6d696e6564206279206263617368' },
         coinbasevalue: 1250000000,
         coinbasetxn: undefined,
-        default_witness_commitment:
-          '6a24aa21a9ede2f61c3f71d1defd3fa999dfa36953755c690689799962'
-          + 'b48bebd836974e8cf9',
         transactions: []
       },
       error: null,
@@ -622,9 +615,6 @@ describe('Node', function() {
 
     const json = await node.rpc.call({
       method: 'getblocktemplate',
-      params: [
-        {rules: ['segwit']}
-      ],
       id: '1'
     }, {});
 
@@ -634,16 +624,16 @@ describe('Node', function() {
     const result = json.result;
 
     let fees = 0;
-    let weight = 0;
+    let size = 0;
 
     for (const item of result.transactions) {
       fees += item.fee;
-      weight += item.weight;
+      size += item.size;
     }
 
-    assert.strictEqual(result.transactions.length, 2);
+    assert.strictEqual(result.transactions.length, 0);
     assert.strictEqual(fees, tx1.getFee() + tx2.getFee());
-    assert.strictEqual(weight, tx1.getWeight() + tx2.getWeight());
+    assert.strictEqual(size, tx1.getSize() + tx2.getSize());
     assert.strictEqual(result.transactions[0].hash, tx1.txid());
     assert.strictEqual(result.transactions[1].hash, tx2.txid());
     assert.strictEqual(result.coinbasevalue, 125e7 + fees);
@@ -661,28 +651,14 @@ describe('Node', function() {
     assert.strictEqual(tx.txid(), tx2.txid());
   });
 
-  it('should prioritise transaction', async () => {
-    const json = await node.rpc.call({
-      method: 'prioritisetransaction',
-      params: [tx2.txid(), 0, 10000000],
-      id: '1'
-    }, {});
-
-    assert(!json.error);
-    assert.strictEqual(json.result, true);
-  });
-
   it('should get a block template', async () => {
     let fees = 0;
-    let weight = 0;
+    let size = 0;
 
     node.rpc.refreshBlock();
 
     const json = await node.rpc.call({
       method: 'getblocktemplate',
-      params: [
-        {rules: ['segwit']}
-      ],
       id: '1'
     }, {});
 
@@ -693,12 +669,12 @@ describe('Node', function() {
 
     for (const item of result.transactions) {
       fees += item.fee;
-      weight += item.weight;
+      size += item.size;
     }
 
-    assert.strictEqual(result.transactions.length, 2);
+    assert.strictEqual(result.transactions.length, 0);
     assert.strictEqual(fees, tx1.getFee() + tx2.getFee());
-    assert.strictEqual(weight, tx1.getWeight() + tx2.getWeight());
+    assert.strictEqual(size, tx1.getSize() + tx2.getSize());
     assert.strictEqual(result.transactions[0].hash, tx2.txid());
     assert.strictEqual(result.transactions[1].hash, tx1.txid());
     assert.strictEqual(result.coinbasevalue, 125e7 + fees);

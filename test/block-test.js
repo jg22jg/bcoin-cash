@@ -32,7 +32,7 @@ const compact898352 = common.readCompact('compact898352');
 // Format: [name, sigops, weight]
 const sigopsVectors = [
   ['block928816', 9109, 3568200],
-  ['block928828', 23236, 2481560],
+  ['block928828', 5809, 2481560],
   ['block928831', 10035, 3992382],
   ['block928848', 11319, 3992537],
   ['block928849', 9137, 3682105],
