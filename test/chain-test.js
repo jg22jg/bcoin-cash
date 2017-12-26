@@ -167,17 +167,17 @@ describe('Chain', function() {
   });
 
   it('should have correct chain value', () => {
-    assert.strictEqual(chain.db.state.value, 897500000000);
-    assert.strictEqual(chain.db.state.coin, 220);
-    assert.strictEqual(chain.db.state.tx, 221);
+    assert.strictEqual(chain.db.state.value, 872500000000);
+    assert.strictEqual(chain.db.state.coin, 200);
+    assert.strictEqual(chain.db.state.tx, 201);
   });
 
   it('should have correct wallet balance', async () => {
-    assert.strictEqual(wallet.balance, 897500000000);
+    assert.strictEqual(wallet.balance, 872500000000);
   });
 
   it('should handle a reorg', async () => {
-    assert.strictEqual(chain.height, 210);
+    assert.strictEqual(chain.height, 200);
 
     const entry = await chain.getEntry(tip2.hash);
     assert(entry);
@@ -199,17 +199,17 @@ describe('Chain', function() {
   });
 
   it('should have correct chain value', () => {
-    assert.strictEqual(chain.db.state.value, 900000000000);
-    assert.strictEqual(chain.db.state.coin, 221);
-    assert.strictEqual(chain.db.state.tx, 222);
+    assert.strictEqual(chain.db.state.value, 872500000000);
+    assert.strictEqual(chain.db.state.coin, 200);
+    assert.strictEqual(chain.db.state.tx, 201);
   });
 
   it('should have correct wallet balance', async () => {
-    assert.strictEqual(wallet.balance, 900000000000);
+    assert.strictEqual(wallet.balance, 872500000000);
   });
 
   it('should check main chain', async () => {
-    const result = await chain.isMainChain(tip1);
+    const result = await chain.isMainChain(chain.tip.hash);
     assert(!result);
   });
 
@@ -279,9 +279,9 @@ describe('Chain', function() {
   });
 
   it('should have correct chain value', () => {
-    assert.strictEqual(chain.db.state.value, 905000000000);
-    assert.strictEqual(chain.db.state.coin, 224);
-    assert.strictEqual(chain.db.state.tx, 225);
+    assert.strictEqual(chain.db.state.value, 875000000000);
+    assert.strictEqual(chain.db.state.coin, 201);
+    assert.strictEqual(chain.db.state.tx, 202);
   });
 
   it('should get coin', async () => {
@@ -318,10 +318,10 @@ describe('Chain', function() {
   });
 
   it('should have correct wallet balance', async () => {
-    assert.strictEqual(wallet.balance, 907500000000);
-    assert.strictEqual(wallet.receiveDepth, 15);
-    assert.strictEqual(wallet.changeDepth, 14);
-    assert.strictEqual(wallet.txs, 226);
+    assert.strictEqual(wallet.balance, 874999999705);
+    assert.strictEqual(wallet.receiveDepth, 4);
+    assert.strictEqual(wallet.changeDepth, 3);
+    assert.strictEqual(wallet.txs, 202);
   });
 
   it('should get tips and remove chains', async () => {
@@ -329,7 +329,7 @@ describe('Chain', function() {
       const tips = await chain.db.getTips();
 
       assert.notStrictEqual(tips.indexOf(chain.tip.hash), -1);
-      assert.strictEqual(tips.length, 2);
+      assert.strictEqual(tips.length, 1);
     }
 
     await chain.db.removeChains();
@@ -349,7 +349,7 @@ describe('Chain', function() {
       total += txs.length;
     });
 
-    assert.strictEqual(total, 226);
+    assert.strictEqual(total, 201);
   });
 
   it('should activate csv', async () => {
@@ -357,7 +357,7 @@ describe('Chain', function() {
 
     miner.options.version = -1;
 
-    assert.strictEqual(chain.height, 214);
+    assert.strictEqual(chain.height, 201);
 
     const prev = await chain.getPrevious(chain.tip);
     const state = await chain.getState(prev, deployments.csv);
@@ -388,7 +388,7 @@ describe('Chain', function() {
       }
     }
 
-    assert.strictEqual(chain.height, 631);
+    assert.strictEqual(chain.height, 618);
     assert(chain.state.hasCSV());
 
     const cache = await chain.db.getStateCache();
@@ -486,7 +486,7 @@ describe('Chain', function() {
   });
 
   it('should have correct wallet balance', async () => {
-    assert.strictEqual(wallet.balance, 1412499980000);
+    assert.strictEqual(wallet.balance, 1407499999705);
   });
 
   it('should fail to connect bad bits', async () => {
@@ -546,10 +546,10 @@ describe('Chain', function() {
       assert(await chain.add(block));
     }
 
-    assert.strictEqual(chain.height, 36);
+    assert.strictEqual(chain.height, 819);
   });
 
-  it('should mine a witness tx', async () => {
+  it('should mine a tx', async () => {
     const prev = await chain.getBlock(chain.height - 1000);
     const cb = prev.txs[0];
     const mtx = new MTX();
@@ -755,7 +755,7 @@ describe('Chain', function() {
       assert(await chain.add(block, flags));
     }
 
-    assert.strictEqual(chain.height, 514);
+    assert.strictEqual(chain.height, 931);
   });
 
   it('should fail to connect too many sigops', async () => {
