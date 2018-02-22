@@ -43,10 +43,6 @@ const wallet = new MemWallet({
   network,
  });
 
-const witWallet = new MemWallet({
-  network,
-});
-
 let tip1 = null;
 let tip2 = null;
 
@@ -195,7 +191,7 @@ describe('Chain', function() {
 
     assert(forked);
     assert.strictEqual(chain.tip.hash, block.hash('hex'));
-    assert(chain.tip.chainwork.cmp(tip1.chainwork) > 0);
+    assert(chain.tip.chainwork.gt(tip1.chainwork));
   });
 
   it('should have correct chain value', () => {
@@ -385,6 +381,11 @@ describe('Chain', function() {
           assert.strictEqual(state, 3);
           break;
         }
+        case 1024: {
+          const prev = await chain.getPrevious(chain.tip);
+          const state = await chain.getState(prev)
+          assert.strictEqual(state, 4);
+        }
       }
     }
 
@@ -535,8 +536,8 @@ describe('Chain', function() {
 
  it('should add addrs to miner', async () => {
     miner.addresses.length = 0;
-    miner.addAddress(witWallet.getReceive());
-    assert.strictEqual(witWallet.getReceive().getType());
+    miner.addAddress(wallet.getReceive());
+    assert.strictEqual(wallet.getReceive().getType());
   });
 
   it('should mine 200 blocks', async () => {
@@ -550,14 +551,14 @@ describe('Chain', function() {
   });
 
   it('should mine a tx', async () => {
-    const prev = await chain.getBlock(chain.height - 1000);
+    const prev = await chain.getBlock(chain.height - 2000);
     const cb = prev.txs[0];
     const mtx = new MTX();
 
     mtx.addTX(cb, 0);
-    mtx.addOutput(witWallet.getAddress(), 1000);
+    mtx.addOutput(wallet.getAddress(), 1000);
 
-    witWallet.sign(mtx);
+    wallet.sign(mtx);
 
     const job = await cpu.createJob();
     job.addTX(mtx.toTX(), mtx.view);
@@ -581,9 +582,9 @@ describe('Chain', function() {
       mtx.addTX(cb, 0);
 
       for (let j = 0; j < 16; j++)
-        mtx.addOutput(witWallet.getAddress(), 1);
+        mtx.addOutput(wallet.getAddress(), 1);
 
-      witWallet.sign(mtx);
+      wallet.sign(mtx);
 
       job.pushTX(mtx.toTX());
     }
@@ -606,9 +607,9 @@ describe('Chain', function() {
       mtx.addTX(cb, 0);
 
       for (let j = 0; j < 20; j++)
-        mtx.addOutput(witWallet.getAddress(), 1);
+        mtx.addOutput(wallet.getAddress(), 1);
 
-      witWallet.sign(mtx);
+      wallet.sign(mtx);
 
       job.pushTX(mtx.toTX());
     }
@@ -631,9 +632,9 @@ describe('Chain', function() {
       mtx.addTX(cb, 0);
 
       for (let j = 0; j < 15; j++)
-        mtx.addOutput(witWallet.getAddress(), 1);
+        mtx.addOutput(wallet.getAddress(), 1);
 
-      witWallet.sign(mtx);
+      wallet.sign(mtx);
 
       job.pushTX(mtx.toTX());
     }
@@ -666,9 +667,9 @@ describe('Chain', function() {
     const mtx = new MTX();
 
     mtx.addTX(cb, 0);
-    mtx.addOutput(witWallet.getAddress(), 1);
+    mtx.addOutput(wallet.getAddress(), 1);
 
-    witWallet.sign(mtx);
+    wallet.sign(mtx);
 
     job.addTX(mtx.toTX(), mtx.view);
     job.refresh();
@@ -684,9 +685,9 @@ describe('Chain', function() {
     const mtx = new MTX();
 
     mtx.addTX(cb, 0);
-    mtx.addOutput(witWallet.getAddress(), 1e8);
+    mtx.addOutput(wallet.getAddress(), 1e8);
 
-    witWallet.sign(mtx);
+    wallet.sign(mtx);
 
     job.pushTX(mtx.toTX());
     job.refresh();
@@ -705,11 +706,11 @@ describe('Chain', function() {
 
     const value = Math.floor(consensus.MAX_MONEY / 2);
 
-    mtx.addOutput(witWallet.getAddress(), value);
-    mtx.addOutput(witWallet.getAddress(), value);
-    mtx.addOutput(witWallet.getAddress(), value);
+    mtx.addOutput(wallet.getAddress(), value);
+    mtx.addOutput(wallet.getAddress(), value);
+    mtx.addOutput(wallet.getAddress(), value);
 
-    witWallet.sign(mtx);
+    wallet.sign(mtx);
 
     job.pushTX(mtx.toTX());
     job.refresh();
@@ -789,7 +790,7 @@ describe('Chain', function() {
         mtx.inputs[j - 2].script.fromItems([script.toRaw()]);
       }
 
-      mtx.addOutput(witWallet.getAddress(), 1);
+      mtx.addOutput(wallet.getAddress(), 1);
 
       job.pushTX(mtx.toTX());
     }
