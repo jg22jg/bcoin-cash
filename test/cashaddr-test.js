@@ -1,7 +1,7 @@
-// Parts of this software are based on "bech32".
-// https://github.com/sipa/bech32
+// Parts of this software are based on "cashaddr".
+// https://github.com/bitcoin-abc/src/cashaddr.cpp
 //
-// Copyright (c) 2017 Pieter Wuille
+// Copyright (c) 2017 Amaury Sechet
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 'use strict';
 
 const assert = require('./util/assert');
-const bech32 = require('../lib/utils/bech32');
+const cashaddr = require('../lib/utils/cashaddr');
 const Address = require('../lib/primitives/address');
 
 const validChecksums = [
@@ -105,10 +105,10 @@ const invalidAddresses = [
 ];
 
 function fromAddress(hrp, addr) {
-  const dec = bech32.decode(addr);
+  const dec = cashaddr.decode(addr);
 
   if (dec.hrp !== hrp)
-    throw new Error('Invalid bech32 prefix or data length.');
+    throw new Error('Invalid cashaddr prefix or data length.');
 
   if (dec.version === 0 && dec.hash.length !== 20 && dec.hash.length !== 32)
     throw new Error('Malformed witness program.');
@@ -120,7 +120,7 @@ function fromAddress(hrp, addr) {
 }
 
 function toAddress(hrp, version, program) {
-  const ret = bech32.encode(hrp, version, program);
+  const ret = cashaddr.encode(hrp, version, program);
 
   fromAddress(hrp, ret);
 
@@ -135,16 +135,16 @@ function createProgram(version, program) {
   return data;
 }
 
-describe('Bech32', function() {
+describe('CashAddr', function() {
   for (const addr of validChecksums) {
     it(`should have valid checksum for ${addr}`, () => {
-      assert(bech32.deserialize(addr));
+      assert(cashaddr.deserialize(addr));
     });
   }
 
   for (const [addr, script] of validAddresses) {
     it(`should have valid address for ${addr}`, () => {
-      let hrp = 'bc';
+      let hrp = 'bitcoincash:';
       let ret = null;
 
       try {
@@ -184,14 +184,14 @@ describe('Bech32', function() {
       let ret = null;
 
       try {
-        ret = Address.fromBech32(addr, 'main');
+        ret = Address.fromCashAddr(addr, 'main');
       } catch (e) {
         ret = null;
       }
 
       if (ret === null) {
         try {
-          ret = Address.fromBech32(addr, 'testnet');
+          ret = Address.fromCashAddr(addr, 'testnet');
         } catch (e) {
           ret = null;
         }
@@ -202,15 +202,15 @@ describe('Bech32', function() {
       const output = createProgram(ret.version, ret.hash);
       assert.bufferEqual(output, script);
 
-      const recreate = ret.toBech32();
+      const recreate = ret.toCashAddr();
       assert.strictEqual(recreate, addr.toLowerCase());
     });
   }
 
   for (const addr of invalidAddresses) {
     it(`should have invalid address for ${addr}`, () => {
-      assert.throws(() => Address.fromBech32(addr, 'main'));
-      assert.throws(() => Address.fromBech32(addr, 'testnet'));
+      assert.throws(() => Address.fromCashAddr(addr, 'main'));
+      assert.throws(() => Address.fromCashAddr(addr, 'testnet'));
     });
   }
 });
