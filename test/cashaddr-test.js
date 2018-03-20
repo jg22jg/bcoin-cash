@@ -1,7 +1,7 @@
 // Parts of this software are based on "cashaddr".
 // https://github.com/bitcoin-abc/src/cashaddr.cpp
 //
-// Copyright (c) 2017 Amaury Sechet
+// Copyright (c) 2017 Pieter Wuille
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -31,25 +31,23 @@ const cashaddr = require('../lib/utils/cashaddr');
 const Address = require('../lib/primitives/address');
 
 const validChecksums = [
-  'A12UEL5L',
-  'an83characterlonghumanreadablepartthatcontains'
-  + 'thenumber1andtheexcludedcharactersbio1tt5tgs',
-  'abcdef1qpzry9x8gf2tvdw0s3jn54khce6mua7lmqqqxw',
-  '11qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq'
-  + 'qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqc8247j',
-  'split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w'
+  'prefix:x64nx6hz',
+  'PREFIX:X64NX6HZ',
+  'p:gpf8m4h7',
+  'bitcoincash:qpzry9x8gf2tvdw0s3jn54khce6mua7lcw20ayyn',
+  'bchtest:testnetaddress4d6njnut'
 ];
 
 const validAddresses = [
   [
-    'BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4',
+    'bitcoincash:',
     Buffer.from([
       0x00, 0x14, 0x75, 0x1e, 0x76, 0xe8, 0x19, 0x91, 0x96, 0xd4, 0x54,
       0x94, 0x1c, 0x45, 0xd1, 0xb3, 0xa3, 0x23, 0xf1, 0x43, 0x3b, 0xd6
     ])
   ],
   [
-    'tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7',
+    'bchtest:1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7',
     Buffer.from([
       0x00, 0x20, 0x18, 0x63, 0x14, 0x3c, 0x14, 0xc5, 0x16, 0x68, 0x04,
       0xbd, 0x19, 0x20, 0x33, 0x56, 0xda, 0x13, 0x6c, 0x98, 0x56, 0x78,
@@ -58,7 +56,7 @@ const validAddresses = [
     ])
   ],
   [
-    'bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw50'
+    'bitcoincash:1pw508d6qejxtdg4y5r3zarvary0c5xw7kw50'
     + '8d6qejxtdg4y5r3zarvary0c5xw7k7grplx',
     Buffer.from([
       0x81, 0x28, 0x75, 0x1e, 0x76, 0xe8, 0x19, 0x91, 0x96, 0xd4, 0x54,
@@ -72,6 +70,12 @@ const validAddresses = [
     Buffer.from([
       0x90, 0x02, 0x75, 0x1e
     ])
+  ],
+  [
+  'helloworld',
+  Buffer.from([
+    0x1f, 0x0d
+  ])
   ],
   [
     'bc1zw508d6qejxtdg4y5r3zarvaryvg6kdaj',
@@ -92,39 +96,58 @@ const validAddresses = [
 ];
 
 const invalidAddresses = [
-  'tc1qw508d6qejxtdg4y5r3zarvary0c5xw7kg3g4ty',
-  'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t5',
-  'BC13W508D6QEJXTDG4Y5R3ZARVARY0C5XW7KN40WF2',
-  'bc1rw5uspcuh',
-  'bc10w508d6qejxtdg4y5r3zarvary0c5xw7kw508d'
-  + '6qejxtdg4y5r3zarvary0c5xw7kw5rljs90',
-  'BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P',
-  'tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7',
-  'tb1pw508d6qejxtdg4y5r3zarqfsj6c3',
-  'tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv'
-];
+  'prefix:x32nx6hz',
+  'prEfix:x64nx6hz',
+  'prefix:x64nx6Hz',
+  'pref1x:6m8cxv73',
+  'prefix:',
+  ':u9wsx07j',
+  'pre:fix:x32nx6hz',
+  'prefixx64nx6hz'
+ ];
 
-function fromAddress(hrp, addr) {
+function fromAddress(prefix, addr) {
   const dec = cashaddr.decode(addr);
 
-  if (dec.hrp !== hrp)
+  if (dec.prefix !== prefix)
     throw new Error('Invalid cashaddr prefix or data length.');
 
-  if (dec.version === 0 && dec.hash.length !== 20 && dec.hash.length !== 32)
-    throw new Error('Malformed witness program.');
-
   return {
-    version: dec.version,
     program: dec.hash
   };
 }
 
-function toAddress(hrp, version, program) {
-  const ret = cashaddr.encode(hrp, version, program);
+function toAddress(prefix, version, program) {
+  const ret = cashaddr.encode(prefix, version, program);
 
-  fromAddress(hrp, ret);
+  fromAddress(prefix, ret);
 
   return ret;
+}
+
+function caseInsensitive(s1, s2) {
+  if (s1.length !== s2.length)
+    return false;
+
+  for (let i = 0; i < s1.length; i++) {
+    let c1 = s1[i];
+
+    if (c1 >= 'A' && c1 <= 'Z') {
+      c1 -= ('A' - 'a');
+    }
+
+    let c2 = s2[i];
+
+    if (c2 >= 'A' && c2 <= 'Z') {
+      c2 -= ('A' - 'a');
+    }
+
+    if (c1 !== c2) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function createProgram(version, program) {
@@ -144,19 +167,19 @@ describe('CashAddr', function() {
 
   for (const [addr, script] of validAddresses) {
     it(`should have valid address for ${addr}`, () => {
-      let hrp = 'bitcoincash:';
+      let prefix = 'bitcoincash';
       let ret = null;
 
       try {
-        ret = fromAddress(hrp, addr);
+        ret = fromAddress(prefix, addr);
       } catch (e) {
         ret = null;
       }
 
       if (ret === null) {
-        hrp = 'tb';
+        prefix = 'tb';
         try {
-          ret = fromAddress(hrp, addr);
+          ret = fromAddress(prefix, addr);
         } catch (e) {
           ret = null;
         }
@@ -167,15 +190,15 @@ describe('CashAddr', function() {
       const output = createProgram(ret.version, ret.program);
       assert.bufferEqual(output, script);
 
-      const recreate = toAddress(hrp, ret.version, ret.program);
+      const recreate = toAddress(prefix, ret.version, ret.program);
       assert.strictEqual(recreate, addr.toLowerCase());
     });
   }
 
   for (const addr of invalidAddresses) {
     it(`should have invalid address for ${addr}`, () => {
-      assert.throws(() => fromAddress('bc', addr));
-      assert.throws(() => fromAddress('tb', addr));
+      assert.throws(() => fromAddress('bitcoincash', addr));
+      assert.throws(() => fromAddress('bchtest', addr));
     });
   }
 
