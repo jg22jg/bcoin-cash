@@ -1,9 +1,12 @@
 {
-  "name": "bcoin-abc",
+  "name": "@bcash-org/bcoin-abc",
   "version": "1.0.0-beta.14",
   "description": "Bitcoin bike-shed",
   "license": "MIT",
-  "repository": "git://github.com/bcash-org/bcoin-abc.git",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bcash-org/bcoin-abc.git"
+  },
   "homepage": "https://github.com/bcash-org/bcoin-abc",
   "bugs": {
     "url": "https://github.com/bcash-org/bcoin-abc/issues"
@@ -27,7 +30,12 @@
   "dependencies": {
     "bn.js": "4.11.8",
     "elliptic": "6.4.0",
-    "n64": "~0.1.0"
+    "n64": "~0.1.0",
+    "bcoin-native": "0.0.23",
+    "leveldown": "1.7.2",
+    "secp256k1": "3.3.0",
+    "socket.io": "2.0.3",
+    "socket.io-client": "2.0.3"
   },
   "optionalDependencies": {
     "bcoin-native": "0.0.23",
@@ -73,5 +81,9 @@
     "webpack-browser": "webpack --config webpack.browser.js",
     "webpack-compat": "webpack --config webpack.compat.js",
     "webpack-node": "webpack --config webpack.node.js"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "test"
   }
 }
