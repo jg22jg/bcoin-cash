@@ -9,7 +9,7 @@ const SPVNode = require('../lib/node/spvnode');
 const util = require('../lib/utils/util');
 const Outpoint = require('../lib/primitives/outpoint');
 
-const node = SPVNode({
+const node = new SPVNode({
   config: true,
   argv: true,
   env: true,
@@ -53,3 +53,4 @@ process.on('unhandledRejection', (err, promise) => {
   console.error(err.stack);
   process.exit(1);
 });
+
