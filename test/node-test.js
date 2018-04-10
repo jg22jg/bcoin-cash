@@ -13,6 +13,7 @@ const FullNode = require('../lib/node/fullnode');
 const MTX = require('../lib/primitives/mtx');
 const TX = require('../lib/primitives/tx');
 const Address = require('../lib/primitives/address');
+const Block = require('../lib/primitives/block');
 
 const node = new FullNode({
   db: 'memory',
@@ -492,8 +493,8 @@ describe('Node', function() {
         mintime: json.result.mintime,
         maxtime: json.result.maxtime,
         expires: json.result.expires,
-        sigoplimit: 20000,
-        sizelimit: 2000000,
+        sigoplimit: getMaxBlockSigops(block.getBaseSize()),
+        sizelimit: consensus.MAX_GENERATED_BLOCK_SIZE,
         longpollid: node.chain.tip.rhash() + '0000000000',
         submitold: false,
         coinbaseaux: { flags: '6d696e6564206279206263617368' },
@@ -562,7 +563,7 @@ describe('Node', function() {
 
   it('should add transaction to mempool', async () => {
     const mtx = await wallet.createTX({
-      rate: 100000,
+      rate: 1000,
       outputs: [{
         value: 100000,
         address: wallet.getAddress()
@@ -633,7 +634,7 @@ describe('Node', function() {
 
     assert.strictEqual(result.transactions.length, 0);
     assert.strictEqual(fees, tx1.getFee() + tx2.getFee());
-    assert.strictEqual(size, tx1.getSize() + tx2.getSize());
+    assert.strictEqual(size, tx1.getBaseSize() + tx2.getBaseSize());
     assert.strictEqual(result.transactions[0].hash, tx1.txid());
     assert.strictEqual(result.transactions[1].hash, tx2.txid());
     assert.strictEqual(result.coinbasevalue, 125e7 + fees);
@@ -674,7 +675,7 @@ describe('Node', function() {
 
     assert.strictEqual(result.transactions.length, 0);
     assert.strictEqual(fees, tx1.getFee() + tx2.getFee());
-    assert.strictEqual(size, tx1.getSize() + tx2.getSize());
+    assert.strictEqual(size, tx1.getBaseSize() + tx2.getBaseSize());
     assert.strictEqual(result.transactions[0].hash, tx2.txid());
     assert.strictEqual(result.transactions[1].hash, tx1.txid());
     assert.strictEqual(result.coinbasevalue, 125e7 + fees);
