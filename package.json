@@ -48,10 +48,9 @@
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.4",
     "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-es2015": "^6.24.1",
-    "babel-preset-es2016": "^6.24.1",
-    "babel-preset-es2017": "^6.24.1",
     "babel-preset-env": "^1.6.1",
+    "babelify": "^8.0.0",
+    "browserify": "^16.1.1",
     "eslint": "^4.18.2",
     "hash.js": "^1.1.3",
     "jsdoc": "^3.5.5",
@@ -65,8 +64,8 @@
   "bin": {
     "bcoin": "./bin/bcash",
     "bcoin-cli": "./bin/cli",
-    "bcoin-node": "./bin/node",
-    "bcoin-spvnode": "./bin/spvnode"
+    "bcoin-spvnode": "./bin/spvnode",
+    "bcoin-node": "./bin/node"
   },
   "scripts": {
     "clean": "rm -f {browser/,}{bcoin.js,bcoin-worker.js}",
@@ -81,9 +80,5 @@
     "webpack-browser": "webpack --config webpack.browser.js",
     "webpack-compat": "webpack --config webpack.compat.js",
     "webpack-node": "webpack --config webpack.node.js"
-  },
-  "directories": {
-    "lib": "lib",
-    "test": "test"
   }
 }
